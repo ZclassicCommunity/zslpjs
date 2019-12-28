@@ -1,3 +1,26 @@
+
+// Sapling note magic values, copied from src/zcash/Zcash.h
+var NOTEENCRYPTION_AUTH_BYTES = 16;
+var ZC_NOTEPLAINTEXT_LEADING = 1;
+var ZC_V_SIZE = 8;
+var ZC_RHO_SIZE = 32;
+var ZC_R_SIZE = 32;
+var ZC_MEMO_SIZE = 512;
+var ZC_DIVERSIFIER_SIZE = 11;
+var ZC_JUBJUB_POINT_SIZE = 32;
+var ZC_JUBJUB_SCALAR_SIZE = 32;
+var ZC_NOTEPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_V_SIZE + ZC_RHO_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE;
+var ZC_SAPLING_ENCPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_DIVERSIFIER_SIZE + ZC_V_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE;
+var ZC_SAPLING_OUTPLAINTEXT_SIZE = ZC_JUBJUB_POINT_SIZE + ZC_JUBJUB_SCALAR_SIZE;
+var ZC_SAPLING_ENCCIPHERTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES;
+var ZC_SAPLING_OUTCIPHERTEXT_SIZE = ZC_SAPLING_OUTPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES;
+
+var ZC_NUM_JS_INPUTS = 2;
+var ZC_NUM_JS_OUTPUTS = 2;
+
+// leading + v + rho + r + memo + auth
+var ZC_NOTECIPHERTEXT_SIZE = 1 + 8 + 32 + 32 + 512 + 16;
+
 export namespace Primatives {
     class Hex {
         static decode(text: string) {
@@ -160,7 +183,8 @@ export namespace Primatives {
         static parse(stream: ByteStream, mayIncludeUnsignedInputs=false) {
             var transaction = new Transaction();
             transaction.version = stream.readInt(4);
-    
+            var nVersionGroupId = stream.readInt(4);
+            
             var txInNum = stream.readVarInt();
             for (var i = 0; i < txInNum; i++) {
                 let input: TransactionInput = {
@@ -190,6 +214,57 @@ export namespace Primatives {
     
             transaction.lockTime = stream.readInt(4);
     
+            var expiryHeight = stream.readInt(4)
+            var valueBalance = stream.readInt(8)
+            var spendDescsNum = stream.readVarInt()
+            for (var i = 0; i < spendDescsNum; i++) {
+                var cv = stream.readBytes(32)
+                var anchor = stream.readBytes(32)
+                var nullifier = stream.readBytes(32)
+                var rk = stream.readBytes(32)
+                var proof = stream.readBytes(192)
+                var spendAuthSig = stream.readBytes(64)
+            }
+
+            var outputDescsNum = stream.readVarInt()
+            for (var i = 0; i < outputDescsNum; i++) {
+                var cv = stream.readBytes(32)
+                var cmu = stream.readBytes(32)
+                var ephemeralKey = stream.readBytes(32)
+                var encCipherText = stream.readBytes(ZC_SAPLING_ENCCIPHERTEXT_SIZE)
+                var outCipherText = stream.readBytes(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
+                var proof = stream.readBytes(192)
+            }
+
+            var JSDescsNum = stream.readVarInt()
+            for (var i = 0; i < JSDescsNum; i++) {
+                var vpub_old = stream.readInt(8)
+                var vpub_new = stream.readInt(8)
+                var anchor = stream.readBytes(32)
+                for (var j = 0; j < ZC_NUM_JS_INPUTS; j++) {
+                    stream.readBytes(32)
+                }
+                for (var j = 0; j < ZC_NUM_JS_OUTPUTS; j++) {
+                    stream.readBytes(32)
+                }
+                var ephemeralKey = stream.readBytes(32)
+                var randomSeed = stream.readBytes(32)
+                for (var j = 0; j < ZC_NUM_JS_INPUTS; j++) {
+                    stream.readBytes(32)
+                }
+                var proof = stream.readBytes(296)
+                for (var j = 0; j < ZC_NUM_JS_OUTPUTS; j++) {
+                    stream.readBytes(ZC_NOTECIPHERTEXT_SIZE)
+                }
+            }
+            if (JSDescsNum > 0) {
+                var joinSplitPubKey = stream.readBytes(32)
+                var joinSplitSig = stream.readBytes(64)
+            }
+            if (!(spendDescsNum==0 && outputDescsNum==0)) {
+                var bindingSig = stream.readBytes(64)
+            }
+
             return transaction;
         }
     }
