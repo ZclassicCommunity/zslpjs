@@ -252,7 +252,7 @@ export namespace Primatives {
                 for (var j = 0; j < ZC_NUM_JS_INPUTS; j++) {
                     stream.readBytes(32)
                 }
-                var proof = stream.readBytes(296)
+                var proof = stream.readBytes(192)
                 for (var j = 0; j < ZC_NUM_JS_OUTPUTS; j++) {
                     stream.readBytes(ZC_NOTECIPHERTEXT_SIZE)
                 }
