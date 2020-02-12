@@ -265,12 +265,12 @@ export class TransactionHelpers {
     // Create raw transaction hex to: Mint new tokens or move the minting baton
     public simpleTokenMint({ tokenId, mintAmount, inputUtxos, tokenReceiverAddress, tokenReceiverSatoshis,
                             batonReceiverAddress, changeReceiverAddress,
-                            extraFee = 0, disableBchChangeOutput = false, batonReceiverSatoshis }:
+                            extraFee = 0, disableBchChangeOutput = false, batonReceiverSatoshis, burnBaton = false }:
                             { tokenId: string, mintAmount: BigNumber, inputUtxos: SlpAddressUtxoResult[],
                                 tokenReceiverAddress: string, batonReceiverAddress: string,
                                 changeReceiverAddress: string, extraFee?: number,
                                 disableBchChangeOutput?: boolean, tokenReceiverSatoshis?: BigNumber,
-                                batonReceiverSatoshis?: BigNumber }): string {
+                                batonReceiverSatoshis?: BigNumber, burnBaton?: boolean }): string {
         // // convert address to cashAddr from SLP format.
         // let fundingAddress_cashfmt = bchaddr.toCashAddress(fundingAddress);
 
@@ -279,8 +279,8 @@ export class TransactionHelpers {
 
         // 1) Create the Send OP_RETURN message
         const mintOpReturn = Slp.buildMintOpReturn({
-            batonVout: 2,
-            mintQuantity: mintAmount,
+            batonVout: burnBaton ? null : 2,
+            mintQuantity: burnBaton ? new BigNumber(0) : mintAmount,
             tokenIdHex: tokenId,
         }, token_type);
 
@@ -290,11 +290,11 @@ export class TransactionHelpers {
             slpMintOpReturn: mintOpReturn,
             mintReceiverAddress: tokenReceiverAddress,
             mintReceiverSatoshis: tokenReceiverSatoshis,
-            batonReceiverAddress,
+            batonReceiverAddress: burnBaton ? null : batonReceiverAddress,
             batonReceiverSatoshis,
             bchChangeReceiverAddress: changeReceiverAddress,
             extraFee,
-            disableBchChangeOutput,
+            disableBchChangeOutput: burnBaton ? false : disableBchChangeOutput
         });
 
         // Return raw hex for this transaction

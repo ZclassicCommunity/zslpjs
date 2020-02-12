@@ -148,8 +148,8 @@ export class BitboxNetwork implements SlpValidator {
     }
 
     // Sent SLP tokens to a single output address with change handled (Warning: Sweeps all BCH/SLP UTXOs for the funding address)
-    async simpleTokenMint(tokenId: string, mintAmount: BigNumber, inputUtxos: SlpAddressUtxoResult[], tokenReceiverAddress: string, batonReceiverAddress: string, changeReceiverAddress: string) {  
-        let txHex = this.txnHelpers.simpleTokenMint({tokenId, mintAmount, inputUtxos, tokenReceiverAddress, batonReceiverAddress, changeReceiverAddress});
+    async simpleTokenMint(tokenId: string, mintAmount: BigNumber, inputUtxos: SlpAddressUtxoResult[], tokenReceiverAddress: string, batonReceiverAddress: string, changeReceiverAddress: string, burnBaton: boolean) {  
+        let txHex = this.txnHelpers.simpleTokenMint({tokenId, mintAmount, inputUtxos, tokenReceiverAddress, batonReceiverAddress, changeReceiverAddress, burnBaton});
         return await this.sendTx(txHex);
     }
 
