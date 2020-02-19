@@ -262,7 +262,7 @@ export class Slp {
             throw new Error("Not an SLP address.");
         }
 
-        config.mintReceiverAddress = bchaddr.toCashAddress(config.mintReceiverAddress);
+        config.mintReceiverAddress = bchaddr.toLegacyAddress(config.mintReceiverAddress);
 
         const transactionBuilder = new this.BITBOX.TransactionBuilder(
             Utils.txnBuilderString(config.mintReceiverAddress));
@@ -292,7 +292,7 @@ export class Slp {
         // Baton address (optional)
         const batonvout = this.parseSlpOutputScript(config.slpGenesisOpReturn).batonVout;
         if (config.batonReceiverAddress) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
             if (batonvout !== 2) {
                 throw Error("batonVout in transaction does not match OP_RETURN data.");
             }
@@ -307,7 +307,7 @@ export class Slp {
 
         // Change (optional)
         if (config.bchChangeReceiverAddress && bchChangeAfterFeeSatoshis.isGreaterThan(new BigNumber(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
 
@@ -325,8 +325,8 @@ export class Slp {
         // Check For Low Fee
         const outValue: number = transactionBuilder.transaction.tx.outs.reduce((v: number, o: any) => v += o.value, 0);
         const inValue: BigNumber = config.input_utxos.reduce((v, i) => v = v.plus(i.satoshis), new BigNumber(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
 
         // TODO: Check for fee too large or send leftover to target address
@@ -345,7 +345,7 @@ export class Slp {
         });
 
         if (!bchaddr.isSlpAddress(config.bchChangeReceiverAddress)) {
-            throw new Error("Token/BCH change receiver address is not in SLP format.");
+            throw new Error("Token/ZCL change receiver address is not in ZSLP format.");
         }
 
         // Parse the SLP SEND OP_RETURN message
@@ -438,7 +438,7 @@ export class Slp {
         // Add dust dust outputs associated with tokens
 
         config.tokenReceiverAddressArray.forEach((outputAddress) => {
-            outputAddress = bchaddr.toCashAddress(outputAddress);
+            outputAddress = bchaddr.toLegacyAddress(outputAddress);
             transactionBuilder.addOutput(outputAddress, 546);
         });
 
@@ -446,7 +446,7 @@ export class Slp {
 
         if (config.requiredNonTokenOutputs && config.requiredNonTokenOutputs.length > 0) {
             config.requiredNonTokenOutputs.forEach((output) => {
-                const outputAddress = bchaddr.toCashAddress(output.receiverAddress);
+                const outputAddress = bchaddr.toLegacyAddress(output.receiverAddress);
                 transactionBuilder.addOutput(outputAddress, output.satoshis);
             });
         }
@@ -454,7 +454,7 @@ export class Slp {
         // Add change, if any
 
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new BigNumber(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
 
@@ -491,8 +491,8 @@ export class Slp {
 
         const outValue: number = transactionBuilder.transaction.tx.outs.reduce((v: number, o: any) => v += o.value, 0);
         const inValue: BigNumber = config.input_token_utxos.reduce((v, i) => v = v.plus(i.satoshis), new BigNumber(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(hex.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
 
         return hex;
@@ -522,9 +522,9 @@ export class Slp {
         if (config.batonReceiverAddress && !bchaddr.isSlpAddress(config.batonReceiverAddress)) {
             throw new Error("Baton receiver address not in SLP format.");
         }
-        config.mintReceiverAddress = bchaddr.toCashAddress(config.mintReceiverAddress);
+        config.mintReceiverAddress = bchaddr.toLegacyAddress(config.mintReceiverAddress);
         if (config.batonReceiverAddress) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
         }
 
         // Make sure inputs don't include spending any tokens or batons for other tokenIds
@@ -585,7 +585,7 @@ export class Slp {
 
         // Baton address (optional)
         if (config.batonReceiverAddress !== null) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
             if (this.parseSlpOutputScript(config.slpMintOpReturn).batonVout !== 2) {
                 throw Error("batonVout in transaction does not match OP_RETURN data.");
             }
@@ -595,7 +595,7 @@ export class Slp {
 
         // Change (optional)
         if (!config.disableBchChangeOutput && config.bchChangeReceiverAddress && bchChangeAfterFeeSatoshis.isGreaterThan(new BigNumber(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
 
@@ -631,8 +631,8 @@ export class Slp {
         // Check For Low Fee
         const outValue: number = transactionBuilder.transaction.tx.outs.reduce((v: number, o: any)  => v += o.value, 0);
         const inValue: BigNumber = config.input_baton_utxos.reduce((v, i) => v = v.plus(i.satoshis), new BigNumber(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(hex.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
 
         // TODO: Check for fee too large or send leftover to target address
@@ -654,11 +654,11 @@ export class Slp {
             }
 
             if (sendMsg.sendOutputs!.length === 2 && !config.bchChangeReceiverAddress) {
-                throw new Error("Token/BCH change address is not provided.");
+                throw new Error("Token/ZCL change address is not provided.");
             }
 
             if (!bchaddr.isSlpAddress(config.bchChangeReceiverAddress)) {
-                throw new Error("Token/BCH change receiver address is not in SLP format.");
+                throw new Error("Token/ZCL change receiver address is not in ZSLP format.");
             }
         } else if (!config.tokenIdHex) {
             console.log("[WARNING!] Include 'config.tokenIdHex' in order to accidental token burning.  To supress this log message set 'config.tokenIdHex' to an empty string.")
@@ -720,13 +720,13 @@ export class Slp {
         if (config.slpBurnOpReturn) {
             transactionBuilder.addOutput(config.slpBurnOpReturn!, 0);
 
-            const outputAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            const outputAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(outputAddress, 546);
         }
 
         // Change
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new BigNumber(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
 
@@ -744,8 +744,8 @@ export class Slp {
         // Check For Low Fee
         const outValue: number = transactionBuilder.transaction.tx.outs.reduce((v: number, o: any) => v += o.value, 0);
         const inValue: BigNumber = config.input_token_utxos.reduce((v, i) => v = v.plus(i.satoshis), new BigNumber(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
 
         return tx;
@@ -791,13 +791,13 @@ export class Slp {
 
         // BCH outputs
         config.bchReceiverAddressArray.forEach((outputAddress, i) => {
-            outputAddress = bchaddr.toCashAddress(outputAddress);
+            outputAddress = bchaddr.toLegacyAddress(outputAddress);
             transactionBuilder.addOutput(outputAddress, Math.round(config.bchReceiverSatoshiAmounts[i].toNumber()));
         });
 
         // Change
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new BigNumber(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
 
@@ -815,8 +815,8 @@ export class Slp {
         // Check For Low Fee
         const outValue: number = transactionBuilder.transaction.tx.outs.reduce((v: number, o: any) => v += o.value, 0);
         const inValue: BigNumber = config.input_token_utxos.reduce((v, i) => v = v.plus(i.satoshis), new BigNumber(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
 
         // TODO: Check for fee too large or send leftover to target address

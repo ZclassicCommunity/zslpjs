@@ -104,11 +104,11 @@ export class BitboxNetwork implements SlpValidator {
 
     async getAllSlpBalancesAndUtxos(address: string|string[]) {
         if(typeof address === "string") {
-            address = bchaddr.toCashAddress(address);
+            address = bchaddr.toLegacyAddress(address);
             let result = await this.getUtxoWithTxDetails(address);
             return await this.processUtxosForSlp(result);
         }
-        address = address.map(a => bchaddr.toCashAddress(a));
+        address = address.map(a => bchaddr.toLegacyAddress(a));
         let results: { address: string, result: SlpBalancesResult }[] = []
         for(let i = 0; i < address.length; i++) {
             let utxos = await this.getUtxoWithTxDetails(address[i]);

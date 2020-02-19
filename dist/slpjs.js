@@ -280,14 +280,14 @@ var BitboxNetwork = /** @class */ (function () {
                 switch (_d.label) {
                     case 0:
                         if (!(typeof address === "string")) return [3 /*break*/, 3];
-                        address = bchaddr.toCashAddress(address);
+                        address = bchaddr.toLegacyAddress(address);
                         return [4 /*yield*/, this.getUtxoWithTxDetails(address)];
                     case 1:
                         result = _d.sent();
                         return [4 /*yield*/, this.processUtxosForSlp(result)];
                     case 2: return [2 /*return*/, _d.sent()];
                     case 3:
-                        address = address.map(function (a) { return bchaddr.toCashAddress(a); });
+                        address = address.map(function (a) { return bchaddr.toLegacyAddress(a); });
                         results = [];
                         i = 0;
                         _d.label = 4;
@@ -1828,7 +1828,7 @@ var Slp = /** @class */ (function () {
         if (config.batonReceiverAddress && !bchaddr.isSlpAddress(config.batonReceiverAddress)) {
             throw new Error("Not an SLP address.");
         }
-        config.mintReceiverAddress = bchaddr.toCashAddress(config.mintReceiverAddress);
+        config.mintReceiverAddress = bchaddr.toLegacyAddress(config.mintReceiverAddress);
         var transactionBuilder = new this.BITBOX.TransactionBuilder(utils_1.Utils.txnBuilderString(config.mintReceiverAddress));
         var satoshis = new bignumber_js_1.default(0);
         config.input_utxos.forEach(function (token_utxo) {
@@ -1847,7 +1847,7 @@ var Slp = /** @class */ (function () {
         // Baton address (optional)
         var batonvout = this.parseSlpOutputScript(config.slpGenesisOpReturn).batonVout;
         if (config.batonReceiverAddress) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
             if (batonvout !== 2) {
                 throw Error("batonVout in transaction does not match OP_RETURN data.");
             }
@@ -1862,7 +1862,7 @@ var Slp = /** @class */ (function () {
         }
         // Change (optional)
         if (config.bchChangeReceiverAddress && bchChangeAfterFeeSatoshis.isGreaterThan(new bignumber_js_1.default(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
         // sign inputs
@@ -1886,8 +1886,8 @@ var Slp = /** @class */ (function () {
         // Check For Low Fee
         var outValue = transactionBuilder.transaction.tx.outs.reduce(function (v, o) { return v += o.value; }, 0);
         var inValue = config.input_utxos.reduce(function (v, i) { return v = v.plus(i.satoshis); }, new bignumber_js_1.default(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
         // TODO: Check for fee too large or send leftover to target address
         return tx;
@@ -1902,7 +1902,7 @@ var Slp = /** @class */ (function () {
             }
         });
         if (!bchaddr.isSlpAddress(config.bchChangeReceiverAddress)) {
-            throw new Error("Token/BCH change receiver address is not in SLP format.");
+            throw new Error("Token/ZCL change receiver address is not in ZSLP format.");
         }
         // Parse the SLP SEND OP_RETURN message
         var sendMsg = this.parseSlpOutputScript(config.slpSendOpReturn);
@@ -1966,19 +1966,19 @@ var Slp = /** @class */ (function () {
         transactionBuilder.addOutput(config.slpSendOpReturn, 0);
         // Add dust dust outputs associated with tokens
         config.tokenReceiverAddressArray.forEach(function (outputAddress) {
-            outputAddress = bchaddr.toCashAddress(outputAddress);
+            outputAddress = bchaddr.toLegacyAddress(outputAddress);
             transactionBuilder.addOutput(outputAddress, 546);
         });
         // Add BCH-only outputs
         if (config.requiredNonTokenOutputs && config.requiredNonTokenOutputs.length > 0) {
             config.requiredNonTokenOutputs.forEach(function (output) {
-                var outputAddress = bchaddr.toCashAddress(output.receiverAddress);
+                var outputAddress = bchaddr.toLegacyAddress(output.receiverAddress);
                 transactionBuilder.addOutput(outputAddress, output.satoshis);
             });
         }
         // Add change, if any
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new bignumber_js_1.default(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
         // Sign txn and add sig to p2pkh input for convenience if wif is provided,
@@ -2020,8 +2020,8 @@ var Slp = /** @class */ (function () {
         // Check For Low Fee
         var outValue = transactionBuilder.transaction.tx.outs.reduce(function (v, o) { return v += o.value; }, 0);
         var inValue = config.input_token_utxos.reduce(function (v, i) { return v = v.plus(i.satoshis); }, new bignumber_js_1.default(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(hex.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
         return hex;
     };
@@ -2048,9 +2048,9 @@ var Slp = /** @class */ (function () {
         if (config.batonReceiverAddress && !bchaddr.isSlpAddress(config.batonReceiverAddress)) {
             throw new Error("Baton receiver address not in SLP format.");
         }
-        config.mintReceiverAddress = bchaddr.toCashAddress(config.mintReceiverAddress);
+        config.mintReceiverAddress = bchaddr.toLegacyAddress(config.mintReceiverAddress);
         if (config.batonReceiverAddress) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
         }
         // Make sure inputs don't include spending any tokens or batons for other tokenIds
         config.input_baton_utxos.forEach(function (txo) {
@@ -2098,7 +2098,7 @@ var Slp = /** @class */ (function () {
         // bchChangeAfterFeeSatoshis -= config.mintReceiverSatoshis;
         // Baton address (optional)
         if (config.batonReceiverAddress !== null) {
-            config.batonReceiverAddress = bchaddr.toCashAddress(config.batonReceiverAddress);
+            config.batonReceiverAddress = bchaddr.toLegacyAddress(config.batonReceiverAddress);
             if (this.parseSlpOutputScript(config.slpMintOpReturn).batonVout !== 2) {
                 throw Error("batonVout in transaction does not match OP_RETURN data.");
             }
@@ -2107,7 +2107,7 @@ var Slp = /** @class */ (function () {
         }
         // Change (optional)
         if (!config.disableBchChangeOutput && config.bchChangeReceiverAddress && bchChangeAfterFeeSatoshis.isGreaterThan(new bignumber_js_1.default(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
         // Sign txn and add sig to p2pkh input for convenience if wif is provided,
@@ -2149,8 +2149,8 @@ var Slp = /** @class */ (function () {
         // Check For Low Fee
         var outValue = transactionBuilder.transaction.tx.outs.reduce(function (v, o) { return v += o.value; }, 0);
         var inValue = config.input_baton_utxos.reduce(function (v, i) { return v = v.plus(i.satoshis); }, new bignumber_js_1.default(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(hex.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
         // TODO: Check for fee too large or send leftover to target address
         return hex;
@@ -2168,10 +2168,10 @@ var Slp = /** @class */ (function () {
                 throw Error("Burn transaction must have only a single change receiver for token change.");
             }
             if (sendMsg.sendOutputs.length === 2 && !config.bchChangeReceiverAddress) {
-                throw new Error("Token/BCH change address is not provided.");
+                throw new Error("Token/ZCL change address is not provided.");
             }
             if (!bchaddr.isSlpAddress(config.bchChangeReceiverAddress)) {
-                throw new Error("Token/BCH change receiver address is not in SLP format.");
+                throw new Error("Token/ZCL change receiver address is not in ZSLP format.");
             }
         }
         else if (!config.tokenIdHex) {
@@ -2226,12 +2226,12 @@ var Slp = /** @class */ (function () {
         // Burn change OpReturn / token change output
         if (config.slpBurnOpReturn) {
             transactionBuilder.addOutput(config.slpBurnOpReturn, 0);
-            var outputAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            var outputAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(outputAddress, 546);
         }
         // Change
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new bignumber_js_1.default(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
         // sign inputs
@@ -2255,8 +2255,8 @@ var Slp = /** @class */ (function () {
         // Check For Low Fee
         var outValue = transactionBuilder.transaction.tx.outs.reduce(function (v, o) { return v += o.value; }, 0);
         var inValue = config.input_token_utxos.reduce(function (v, i) { return v = v.plus(i.satoshis); }, new bignumber_js_1.default(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
         return tx;
     };
@@ -2295,12 +2295,12 @@ var Slp = /** @class */ (function () {
             .minus(config.bchReceiverSatoshiAmounts.reduce(function (t, v) { return t = t.plus(v); }, new bignumber_js_1.default(0)));
         // BCH outputs
         config.bchReceiverAddressArray.forEach(function (outputAddress, i) {
-            outputAddress = bchaddr.toCashAddress(outputAddress);
+            outputAddress = bchaddr.toLegacyAddress(outputAddress);
             transactionBuilder.addOutput(outputAddress, Math.round(config.bchReceiverSatoshiAmounts[i].toNumber()));
         });
         // Change
         if (bchChangeAfterFeeSatoshis.isGreaterThan(new bignumber_js_1.default(546))) {
-            config.bchChangeReceiverAddress = bchaddr.toCashAddress(config.bchChangeReceiverAddress);
+            config.bchChangeReceiverAddress = bchaddr.toLegacyAddress(config.bchChangeReceiverAddress);
             transactionBuilder.addOutput(config.bchChangeReceiverAddress, bchChangeAfterFeeSatoshis.toNumber());
         }
         // sign inputs
@@ -2324,8 +2324,8 @@ var Slp = /** @class */ (function () {
         // Check For Low Fee
         var outValue = transactionBuilder.transaction.tx.outs.reduce(function (v, o) { return v += o.value; }, 0);
         var inValue = config.input_token_utxos.reduce(function (v, i) { return v = v.plus(i.satoshis); }, new bignumber_js_1.default(0));
-        if (inValue.minus(outValue).isLessThanOrEqualTo(tx.length / 2)) {
-            throw Error("Transaction input BCH amount is too low.  Add more BCH inputs to fund this transaction.");
+        if (inValue.minus(outValue).isLessThan(0)) {
+            throw Error("Transaction input ZCL amount is too low.  Add more ZCL inputs to fund this transaction.");
         }
         // TODO: Check for fee too large or send leftover to target address
         return tx;
