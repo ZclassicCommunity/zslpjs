@@ -6,16 +6,14 @@ yarn.lock
 /node_modules
 
 # ignore built js files
-# *.js
-# index.js
-# *.js.map
-# *.d.ts
+*.js.map
 
 # testing
 /coverage
 
 # production
-# /dist
+/examples
+/test
 
 # misc
 # .DS_Store

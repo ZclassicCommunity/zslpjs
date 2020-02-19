@@ -60,9 +60,9 @@
     "@types/socket.io-client": "^1.4.32",
     "@types/wif": "^2.0.1",
     "axios": "^0.18.1",
-    "bchaddrjs-slp": "0.2.8",
+    "bchaddrjs-slp": "ZSLP/bchaddrjs#a297a3189ca42bc00a6bcea6b79015997a5024c9",
     "bignumber.js": "^8.1.1",
-    "bitcore-lib-cash": "^9.0.0",
-    "lodash": "^4.17.15"
+    "bitcore-lib-cash": "ZSLP/bitcore-lib-zcash#38c113838a28230b3d6cee76568f53173709774a",
+    "lodash": "^4.17.14"
   }
 }
