@@ -3,7 +3,7 @@
 yarn.lock
 
 # dependencies
-/node_modules
+#/node_modules
 
 # ignore built js files
 *.js.map

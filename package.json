@@ -51,9 +51,9 @@
   "dependencies": {
     "@types/lodash": "^4.14.120",
     "axios": "^0.18.1",
-    "bchaddrjs-slp": "ZSLP/bchaddrjs#a297a3189ca42bc00a6bcea6b79015997a5024c9",
+    "bchaddrjs-slp": "ZclassicCommunity/bchaddrjs#a297a3189ca42bc00a6bcea6b79015997a5024c9",
     "bignumber.js": "^8.1.1",
-    "bitcore-lib-cash": "ZSLP/bitcore-lib-zcash#38c113838a28230b3d6cee76568f53173709774a",
+    "bitcore-lib-cash": "ZclassicCommunity/bitcore-lib-cash#38c113838a28230b3d6cee76568f53173709774a",
     "lodash": "^4.17.14"
   }
 }
